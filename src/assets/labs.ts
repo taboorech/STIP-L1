@@ -8,7 +8,7 @@ const labs = [
     results: [
       {
         title: 'Main project',
-        path: 'http://localhost:5173'
+        path: 'https://stip-l1.vercel.app/'
       }
     ],
     codes: [

@@ -18,7 +18,7 @@ const ReportBlock = ({ lab }: ReportBlockProps) => {
 
   if(!lab) {
     return (
-      <div className="w-full flex items-center justify-center">
+      <div className="w-full flex items-center justify-center pt-12">
         Choose the lab 
       </div>
     )
