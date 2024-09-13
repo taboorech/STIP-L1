@@ -35,6 +35,13 @@ const ReportBlock = ({ lab }: ReportBlockProps) => {
         {
           conditionOpen &&
           <ReportContent>
+            <div className="pb-5 pt-2 px-4">
+              { lab.additionalInfo && lab.additionalInfo.map((info) =>
+                <p className="text-justify">
+                  { info }
+                </p>
+              ) }
+            </div>
             { lab.conditionPath ?
               <iframe 
                 src={lab.conditionPath.replace('/edit?usp=sharing', '/preview')}

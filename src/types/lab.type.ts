@@ -11,6 +11,7 @@ interface Result {
 type Lab = {
   id: string;
   title: string;
+  additionalInfo?: string[];
   conditionPath: string;
   results: Result[];
   codes: Code[];

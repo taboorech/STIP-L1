@@ -239,6 +239,407 @@ type Lab = {
 export type { Lab };`
       }
     ]
+  },
+  {
+    id: '2',
+    title: 'Лабораторна робота 2',
+    additionalInfo: [
+      `Варіант 7. Текстове дворівневе меню: при виборі певного пункту меню пункти
+      верхнього рівня розсуваються та вставляють підпункти обраного пункту, тобто пункт
+      меню «розкривається».`,
+      `Варіант 2. Розмістіть на сторінці чотири зображення, два поля введення та кнопку
+      Переставити. При натисканні на цю кнопку зображення з номерами, введеними в
+      текстові поля, слід поміняти місцями.`
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1ubZRO8bXbKRds8vbmBrPwJz8bvqOOxNx/edit?usp=sharing',
+    results: [
+      {
+        title: 'Main project. Exercise 7. Exercise 2',
+        path: 'https://stip-l2.vercel.app/'
+      }
+    ],
+    codes: [
+      {
+        file: 'App.tsx',
+        code: 
+  `import { Route, Routes } from "react-router-dom"
+import Home from "./pages/Home/Home"
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Home/>} />
+    </Routes>
+  )
+}
+
+export default App`
+      },
+      {
+        file: 'Input.tsx',
+        code: 
+  `import classNames from "classnames";
+
+interface InputProps {
+  className?: string;
+  [key: string]: any;
+}
+
+const Input = ({ className, ...rest }: InputProps) => {
+  return (
+    <input
+      className={classNames("px-4 py-2 rounded-lg border", className)}
+      {...rest}
+    />
+  )
+};
+
+export default Input;`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import FirstExercise from "../../components/FirstExercise/FirstExercise";
+import SecondExercise from "../../components/SecondExercise/SecondExercise";
+import Tabs from "../../components/Tabs/Tabs";
+import { Tab } from "../../types/tab.type";
+
+const Home = () => {
+
+  const tabs: Tab[] = [
+    {
+      title: 'Exercise 1',
+      element: <FirstExercise/>
+    },
+    {
+      title: 'Exercise 2',
+      element: <SecondExercise/>
+    },
+  ];
+
+  return (
+    <div className="flex flex-col">
+      <Tabs tabs={tabs} />
+    </div>
+  )
+};
+
+export default Home;`
+      },
+      {
+        file: 'FirstExercise.tsx',
+        code: 
+  `import { useState } from "react";
+import Button from "../Button/Button";
+import Dropdown from "../Dropdown/Dropdown";
+import Backdrop from "../Backdrop/Backdrop";
+import { DropdownItem } from "../../types/dropdown-item.type";
+
+const FirstExercise = () => {
+
+  const [dropdownPosition, setDropdownPosition] = useState<DOMRect | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+
+  const dropdownItems: DropdownItem[] = [
+    {
+      item: 'Item 1',
+    },
+    {
+      item: 'Item 2',
+      subitems: [
+        'Subitem 1',
+        'Subitem 2',
+        'Subitem 3',
+        'Subitem 4',
+        'Subitem 5',
+      ]
+    },
+    {
+      item: 'Item 3',
+    },
+    {
+      item: 'Item 4',
+      subitems: [
+        'Subitem 1',
+        'Subitem 2',
+        'Subitem 3',
+        'Subitem 4',
+        'Subitem 5',
+      ]
+    }
+  ];
+
+  const dropdownButtonClickHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    
+    setDropdownPosition(rect);
+    setDropdownOpen(true);
+  }
+
+  return (
+    <div className="p-4">
+      <Button className="bg-blue-500 text-white" onClick={dropdownButtonClickHandler}>
+        Dropdown
+      </Button>
+      <Dropdown items={dropdownItems}  position={dropdownPosition} isOpen={dropdownOpen} />
+      <Backdrop isOpen={dropdownOpen} onClose={() => setDropdownOpen(false)} />
+    </div>
+  )
+};
+
+export default FirstExercise;`
+      },
+      {
+        file: 'Button.tsx',
+        code: 
+  `import classNames from "classnames";
+import { ReactNode } from "react";
+
+interface ButtonProps {
+  children: string | ReactNode | ReactNode[];
+  className?: string;
+  [key: string]: any;
+}
+
+const Button = ({ className, children, ...rest }: ButtonProps) => {
+  return (
+    <button className={classNames('px-4 py-2 shadow-md rounded-lg', className)} {...rest}>
+      { children }
+    </button>
+  )
+};
+
+export default Button;`
+      },
+      {
+        file: 'Dropdown.tsx',
+        code: 
+  `import classNames from "classnames";
+import { useState } from "react";
+import { DropdownItem } from "../../types/dropdown-item.type";
+import { FaChevronRight, FaChevronDown } from "react-icons/fa6";
+
+interface DropdownProps {
+  isOpen: boolean;
+  position: DOMRect | null;
+  items: DropdownItem[];
+}
+
+const Dropdown = ({ isOpen, position, items }: DropdownProps) => {
+
+  const styles = position ? { left: position.left, top: position.top + position.height } : {};
+  const [activeItems, setActiveItems] = useState<number[]>([]);
+
+  const itemsFill = items.map((item, index) => 
+    <div className="bg-gray-100 cursor-pointer" key={item-index}>
+      <div 
+        className="flex flex-row gap-3 bg-white items-center text-lg hover:bg-gray-50 px-4 py-2" 
+        onClick={() => setActiveItems(prev => prev.includes(index) ? prev.filter((value) => value !== index) : [...prev, index])}
+      >
+        { activeItems.includes(index) && <FaChevronDown className={classNames("text-sm", !item.subitems && 'opacity-0')}/>}
+        { !activeItems.includes(index) && <FaChevronRight className={classNames("text-sm", !item.subitems && 'opacity-0')}/>}
+        { item.item }
+      </div>
+      {(item.subitems && activeItems.includes(index)) && 
+        <div className="bg-transparent">
+          { item.subitems.map((subitem, index) => 
+            <div className="hover:bg-gray-200 px-4 py-2" key={subtitle-subitem-index}>{ subitem }</div>
+          ) }
+        </div>
+      }
+    </div>
+  );
+
+  return (
+    <div 
+      className={classNames("w-3/12 absolute z-30 h-auto bg-white transition-opacity duration-300 ease-in-out mt-2", isOpen ? 'opacity-100' : 'opacity-0')}
+      style={styles}
+    >
+      { itemsFill }
+    </div>
+  )
+};
+
+export default Dropdown;`
+      },
+      {
+        file: 'Backdrop.tsx',
+        code: 
+  `import classNames from "classnames";
+
+interface BackdropProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const Backdrop = ({ isOpen, onClose }: BackdropProps) => {
+  return (
+    <div 
+      className={classNames(
+        "fixed left-0 bottom-0 top-0 right-0 bg-black opacity-0", 
+        "transition-opacity duration-300 ease-in-out",
+        isOpen ? 'z-20 opacity-20' : '-z-50'
+      )}
+      onClick={onClose}
+    >
+    </div>
+  )
+};
+
+
+export default Backdrop;`
+      },
+      {
+        file: 'Tabs.tsx',
+        code: 
+  `import classNames from "classnames";
+import { useState } from "react";
+import { Tab as TabType } from "../../types/tab.type";
+import Tab from "./Tab/Tab";
+
+interface TabsProps {
+  className?: string;
+  tabsClassName?: string;
+  tabs: TabType[];
+  bodyClassName?: string;
+};
+
+const Tabs = ({ className, tabs, tabsClassName, bodyClassName }: TabsProps) => {
+
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const fillTabs = tabs.map(({ title }, index) => 
+    <Tab 
+      onClick={() => setActiveTab(index)} 
+      key={tab-index}
+      className={classNames(index === activeTab && "bg-gray-50 font-semibold")}
+    >{ title }</Tab>
+  );
+
+  return (
+    <div className={classNames("flex flex-col h-screen", className)}>
+      <div className={classNames("w-full flex flex-row", tabsClassName)}>
+        { fillTabs }
+      </div>
+      <div className={classNames("w-full", bodyClassName)}>
+        { tabs[activeTab].element }
+      </div>
+    </div>
+  )
+};
+
+export default Tabs;`
+      },
+      {
+        file: 'Tab.tsx',
+        code: 
+  `import classNames from "classnames";
+import { ReactNode } from "react";
+
+interface TabProps {
+  children: string | ReactNode | ReactNode[];
+  className?: string;
+  [key: string]: any;
+}
+
+const Tab = ({ children, className, ...rest }: TabProps) => {
+  return (
+    <div className={classNames("bg-transparent hover:bg-gray-100 text-xl w-full text-center py-3 cursor-pointer", className)} {...rest}>
+      { children }
+    </div>
+  )
+};
+
+export default Tab;`
+      },
+      {
+        file: 'SecondExercise.tsx',
+        code: 
+  `import React, { useState } from 'react';
+import first from '../../assets/1.jpg';
+import second from '../../assets/2.jpeg';
+import third from '../../assets/3.avif';
+import fourth from '../../assets/3.jpeg';
+import Input from '../Input/Input';
+import Button from '../Button/Button';
+import { IoIosSwap } from "react-icons/io";
+
+const SecondExercise = () => {
+
+  const [images, setImages] = useState<string[]>([first, second, third, fourth]);
+  const [firstImageInput, setFirstImageInput] = useState<number>(1);
+  const [secondImageInput, setSecondImageInput] = useState<number>(1);
+
+  const fillImages = images.map((image, index) => 
+    <div className="w-[20%] flex flex-col gap-3" key={image-image-index}>
+      <img src={image} className="w-full h-[200px] object-cover" />
+      <p className='text-center text-xl'>{ index + 1 }</p>
+    </div>
+  );  
+
+  const changeButtonClickHandler = () => {
+    const changedArr = [...images];
+    const tmp = changedArr[firstImageInput - 1];
+    changedArr[firstImageInput - 1] = images[secondImageInput - 1];
+    changedArr[secondImageInput - 1] = tmp;
+
+    setImages(changedArr);
+  };
+
+  return(
+    <div className="p-4 flex flex-col gap-8">
+      <div className="flex flex-row justify-center gap-[5%]">
+        { fillImages }
+      </div>
+      <div className='flex flex-row justify-around'>
+        <Input 
+          type="number"
+          value={firstImageInput || 1} 
+          className='w-1/6'
+          min="1"
+          max="4"
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFirstImageInput(+event.target.value)} 
+        />
+        <Button className='bg-blue-500 text-white' onClick={changeButtonClickHandler}>
+          <IoIosSwap/>
+        </Button>
+        <Input 
+          type="number"
+          value={secondImageInput || 1} 
+          min="1"
+          max="4"
+          className='w-1/6'
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSecondImageInput(+event.target.value)} 
+        />
+      </div>
+    </div>
+  )
+};
+
+export default SecondExercise;`
+      },
+      {
+        file: 'tab.type.ts',
+        code: 
+  `import { ReactNode } from "react";
+
+type Tab = {
+  title: string;
+  element: ReactNode;
+};
+
+export type { Tab };`
+      },
+      {
+        file: 'dropdown-item.type.ts',
+        code: 
+  `type DropdownItem = {
+  item: string;
+  subitems?: string[];
+};
+
+export type { DropdownItem };`
+      }
+    ]
   }
 ];
 
