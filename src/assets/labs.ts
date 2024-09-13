@@ -577,6 +577,12 @@ const SecondExercise = () => {
   );  
 
   const changeButtonClickHandler = () => {
+    if(firstImageInput <= 0 || firstImageInput > images.length)
+      return
+
+    if(secondImageInput <= 0 || secondImageInput > images.length)
+      return
+
     const changedArr = [...images];
     const tmp = changedArr[firstImageInput - 1];
     changedArr[firstImageInput - 1] = images[secondImageInput - 1];
@@ -592,21 +598,17 @@ const SecondExercise = () => {
       </div>
       <div className='flex flex-row justify-around'>
         <Input 
-          type="number"
-          value={firstImageInput || 1} 
+          type="text"
+          value={firstImageInput || ''} 
           className='w-1/6'
-          min="1"
-          max="4"
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFirstImageInput(+event.target.value)} 
         />
         <Button className='bg-blue-500 text-white' onClick={changeButtonClickHandler}>
           <IoIosSwap/>
         </Button>
         <Input 
-          type="number"
-          value={secondImageInput || 1} 
-          min="1"
-          max="4"
+          type="text"
+          value={secondImageInput || ''} 
           className='w-1/6'
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSecondImageInput(+event.target.value)} 
         />
