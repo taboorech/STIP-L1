@@ -642,6 +642,228 @@ export type { Tab };`
 export type { DropdownItem };`
       }
     ]
+  },
+  {
+    id: '3',
+    title: 'Лабораторна робота 3',
+    additionalInfo: [
+      `Варіант 4: Створення ефекту анімованого тексту. 
+      У тексті символ за символом змінюється колір та розмір чергового символу. 
+      Попередній символ стає тим самим.`
+    ],
+    conditionPath: 'https://docs.google.com/document/d/14uOLEkRJvzz1JtvnQDAKQ5bR8LVXK1KV/edit?usp=sharing',
+    results: [
+      {
+        title: 'Main project. Exercise 4',
+        path: 'https://stip-l3.vercel.app/'
+      }
+    ],
+    codes: [
+      {
+        file: 'App.tsx',
+        code: 
+  `import Home from "./pages/Home/Home"
+
+const App = () => {
+  return (
+    <>
+      <Home/>
+    </>
+  )
+}
+
+export default App`
+      },
+      {
+        file: 'Input.tsx',
+        code: 
+  `import React from "react";
+import "./Input.scss";
+
+interface InputProps {
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  [key: string]: any;
+}
+
+const Input = ({ value, onChange, ...rest }: InputProps) => {
+  return (
+    <input
+      className="Input"
+      value={value}
+      onChange={onChange}
+      {...rest}
+    />
+  )
+};
+
+export default Input;`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import { useState } from "react";
+import AnimatedText from "../../components/AnimatedText/AnimatedText";
+import Input from "../../components/Input/Input";
+import Button from "../../components/Button/Button";
+import './Home.scss';
+
+const Home = () => {
+  const [text, setText] = useState<string>('Animated text');
+  const [value, setValue] = useState<string>('');
+
+  const buttonClickHandler = () => {
+    setText(value);
+  }
+
+  return (
+    <div className="Home">
+      <AnimatedText text={text} />
+      <div className="controls">
+        <Input value={value} onChange={(event) => setValue(event.target.value)}/>
+        <Button onClick={buttonClickHandler} >
+          Save
+        </Button>
+      </div>
+    </div>
+  )
+};
+
+export default Home;`
+      },
+      {
+        file: 'AnimatedText.tsx',
+        code: 
+  `import { useState, useEffect } from 'react';
+import './AnimatedText.scss';
+
+interface AnimatedTextProps {
+  text: string;
+}
+
+const AnimatedText = ({ text }: AnimatedTextProps) => {
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % text.length);
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [text.length]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [text]);
+
+  return (
+    <div className="animated-text">
+      {[...text].map((char, index) => (
+        <span
+          key={index}
+          className={'animated-char index === activeIndex ? 'active' : ''}
+        >
+          {char === " " ? '\u00A0' : char}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+export default AnimatedText;`
+      },
+      {
+        file: 'Button.tsx',
+        code: 
+  `import { ReactNode } from "react";
+import "./Button.scss";
+import classNames from "classnames";
+
+interface ButtonProps {
+  children: string | ReactNode | ReactNode[];
+  className?: string;
+  [key: string]: any;
+}
+
+const Button = ({ children, className, ...rest }: ButtonProps) => {
+  return (
+    <button className={classNames("Button", className)} {...rest}>
+      { children }
+    </button>
+  )
+};
+
+export default Button;`
+      },
+      {
+        file: 'Button.scss',
+        code: 
+  `.Button {
+  padding: .5rem;
+  border-radius: 5px;
+  background-color: #6464e9;
+  color: #FFF;
+  border: none;
+  outline: none;
+  font-size: 18px;
+  cursor: pointer;
+}`
+      },
+      {
+        file: 'AnimatedText.scss',
+        code: 
+  `.animated-text {
+  font-size: 32px;
+  font-weight: bold;
+  color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 7rem;
+
+  > .animated-char {
+    display: inline-block;
+    transition: all .3s ease;
+
+    &.active {
+      color: red;
+      font-size: 40px;
+    }
+  }
+}`
+      },
+      {
+        file: 'Input.scss',
+        code: 
+  `.Input {
+  border-radius: 5px;
+  border: 1px solid #3b3b3b;
+  padding: .5rem;
+  font-size: 18px;
+}`
+      },
+      {
+        file: 'Home.scss',
+        code: 
+  `.Home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  > .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 20%;
+
+    @media screen and (max-width: 700px) {
+      width: 100%;
+    }
+  }
+}`
+      }
+    ]
   }
 ];
 
