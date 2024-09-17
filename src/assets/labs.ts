@@ -756,17 +756,28 @@ const AnimatedText = ({ text }: AnimatedTextProps) => {
     setActiveIndex(0);
   }, [text]);
 
+  useEffect(() => {
+    const textContainer = document.querySelector('.animated-text');
+    
+    if (textContainer) {
+      textContainer.innerHTML = '';
+
+      [...text].forEach((char, index) => {
+        const span = document.createElement('span');
+        span.textContent = char === ' ' ? '\u00A0' : char;
+        span.classList.add('animated-char');
+        
+        if (index === activeIndex) {
+          span.classList.add('active');
+        }
+
+        textContainer.appendChild(span);
+      });
+    }
+  }, [text, activeIndex]);
+
   return (
-    <div className="animated-text">
-      {[...text].map((char, index) => (
-        <span
-          key={index}
-          className={'animated-char index === activeIndex ? 'active' : ''}
-        >
-          {char === " " ? '\u00A0' : char}
-        </span>
-      ))}
-    </div>
+    <div className="animated-text"></div>
   );
 };
 
