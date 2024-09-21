@@ -875,6 +875,286 @@ export default Button;`
 }`
       }
     ]
+  },
+  {
+    id: '4',
+    title: 'Лабораторна робота 4',
+    additionalInfo: [
+      `Завдання 14: Дано рядок \'wйw wяw wёw wqw\'. Напишіть регулярний вираз,
+      який знайде рядки наступного вигляду: по краях стоять букви w, а між
+      ними - буква кирилиці.`
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1R31W-Flb6lgg9JwwvhCRytYs8jFZtQkqG_mzYqd2q_8/edit?usp=sharing',
+    results: [
+      {
+        title: 'Main project. Exercise 14',
+        path: 'https://stip-l4.vercel.app/'
+      }
+    ],
+    codes: [
+      {
+        file: 'App.tsx',
+        code: 
+  `import Home from "./pages/Home/Home"
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Home/>} />
+    </Routes>
+  )
+}
+
+export default App`
+      },
+      {
+        file: 'RegistrationForm.tsx',
+        code: 
+  `import React, { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import { creditCardRegex, registrationValidation } from "../../yup/registration.scheme";
+
+const RegistrationForm = () => {
+  const [creditCardAttempts, setCreditCardAttempts] = useState<number>(0);
+  const [creditCard, setCreditCard] = useState<string>('');
+  const maxAttempts = 3;
+
+  const handleCreditCardInput = (value: string) => {
+    if (!creditCardRegex.test(value) && value.length > 0) {
+      setCreditCardAttempts((prev) => prev + 1);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto my-10 bg-white p-8 rounded-lg shadow-lg">
+      <h1 className="text-2xl font-semibold text-center mb-6">Форма реєстрації</h1>
+      <Formik
+        initialValues={{
+          firstName: "",
+          lastName: "",
+          organization: "",
+          creditCard: "",
+          phone: "",
+          email: "",
+        }}
+        validationSchema={registrationValidation}
+        onSubmit={(_, { resetForm }) => {
+          if (creditCardAttempts >= 3) {
+            alert("Перевищено кількість спроб введення номера кредитної картки");
+            return;
+          }
+
+          alert("Дані успішно надіслані");
+          resetForm();
+          setCreditCardAttempts(0);
+        }}
+      >
+        {({ setFieldValue }) => (
+          <Form className="space-y-6">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Ім'я</label>
+              <Field
+                name="firstName"
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Прізвище</label>
+              <Field
+                name="lastName"
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <label htmlFor="organization" className="block text-sm font-medium text-gray-700">Найменування організації</label>
+              <Field
+                name="organization"
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <ErrorMessage name="organization" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <label htmlFor="creditCard" className="block text-sm font-medium text-gray-700">
+                Номер кредитної картки
+              </label>
+              <Field
+                name="creditCard"
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = event.target.value;
+                  setFieldValue("creditCard", value);
+                  setCreditCard(value);
+                }}
+              />
+              <ErrorMessage name="creditCard" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+            <div>
+              <p>Залишилося спроб введення номера картки: {creditCardAttempts >= 3 ? 0 : maxAttempts - creditCardAttempts}</p>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Номер телефону</label>
+              <Field
+                name="phone"
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <ErrorMessage name="phone" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Електронна пошта</label>
+              <Field
+                name="email"
+                type="email"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div className="flex items-center flex-col justify-between">
+              <button
+                type="submit"
+                className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300"
+                onClick={() => handleCreditCardInput(creditCard)}
+              >
+                Надіслати
+              </button>
+              <button
+                type="reset"
+                className="w-full mt-2 bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300"
+              >
+                Очистити
+              </button>
+            </div>
+          </Form>
+        )}
+      </Formik>
+    </div>
+  );
+};
+
+export default RegistrationForm;`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import RegistrationForm from "../../components/RegistrationForm/RegistrationForm";
+import RegularCheckBlock from "../../components/RegularCheckBlock/RegularCheckBlock";
+
+const Home = () => {
+
+  return (
+    <div>
+      <RegistrationForm/>
+      <RegularCheckBlock/>
+    </div>
+  )
+};
+
+export default Home;`
+      },
+      {
+        file: 'RegularCheckBlock.tsx',
+        code: 
+  `import { useState } from "react";
+
+const RegularCheckBlock = () => {
+  const [inputValue, setInputValue] = useState("");
+  const [result, setResult] = useState<string[]>([]);
+  
+  const cyrillicRegex = /w[а-яёїієґ]w/gi;
+
+  const handleRegexTest = () => {
+    const matches = inputValue.match(cyrillicRegex);
+    if (matches) {
+      setResult(matches);
+    } else {
+      setResult(["Нічого не знайдено"]);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto my-10 bg-white p-8 rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold mb-4">Перевірка регулярного виразу</h2>
+      <div className="mb-4">
+        <label htmlFor="regexInput" className="block text-sm font-medium text-gray-700">
+          Введіть рядок для перевірки:
+        </label>
+        <input
+          id="regexInput"
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        />
+      </div>
+      <button
+        onClick={handleRegexTest}
+        className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition duration-300"
+      >
+        Перевірити
+      </button>
+      <div className="mt-4">
+        <h3 className="font-medium">Результати:</h3>
+        {result.length > 0 && result.map((res, idx) => (
+          <div key={idx} className="text-gray-700 mt-2">
+            {res}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+};
+
+export default RegularCheckBlock;`
+      },
+      {
+        file: 'registration.scheme.ts',
+        code: 
+  `import * as yup from "yup";
+
+const nameRegex = /^[a-zA-Zа-яА-Я]+$/;
+const creditCardRegex = /^\d{16}$/;
+const phoneRegex = /^\+?\d{10,15}$/;
+const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+const registrationValidation = yup.object().shape({
+  firstName: yup
+    .string()
+    .matches(nameRegex, "Ім'я повинно містити тільки літери")
+    .required("Ім'я є обов'язковим"),
+  lastName: yup
+    .string()
+    .matches(nameRegex, "Прізвище повинно містити тільки літери")
+    .required("Прізвище є обов'язковим"),
+  organization: yup.string().required("Найменування організації є обов'язковим"),
+  creditCard: yup
+    .string()
+    .matches(creditCardRegex, "Номер кредитної картки повинен містити 16 цифр")
+    .required("Номер кредитної картки є обов'язковим"),
+  phone: yup
+    .string()
+    .matches(phoneRegex, "Введіть правильний номер телефону")
+    .required("Номер телефону є обов'язковим"),
+  email: yup
+    .string()
+    .matches(emailRegex, "Введіть коректну електронну адресу")
+    .required("Електронна адреса є обов'язковою"),
+});
+
+export { registrationValidation, creditCardRegex };`
+      }
+    ]
   }
 ];
 
