@@ -1155,6 +1155,140 @@ const registrationValidation = yup.object().shape({
 export { registrationValidation, creditCardRegex };`
       }
     ]
+  },
+  {
+    id: '5',
+    title: 'Лабораторна робота 5',
+    additionalInfo: [
+      `Завдання 1. Варіант 14. На кліку на тексті він замінювався іншим текстом`,
+      `Завдання 2. Варіант 14. Блок синього кольору з текстом всередині рухається праворуч наліво, в центрі сторінки блок збільшується, потім текст стає білим, текст збільшується`,
+      `Завдання 3. Варіант парний. Додати на сторінку форму, що містить декілька елементів форми, при цьому при виборі певного значення в одному елементі: відображати інший елемент`,
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1GJBwwkNebeqiBWCDUwCrUASk1d6pUPWl/edit?usp=sharing',
+    results: [
+      {
+        title: 'jQuery project',
+        path: 'https://stip-l5.vercel.app/'
+      }
+    ],
+    codes: [
+      {
+        file: 'App.tsx',
+        code: 
+  `import Home from "./pages/Home/Home"
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Home/>} />
+    </Routes>
+  )
+}
+
+export default App`
+      },
+      {
+        file: 'FormComponent.tsx',
+        code: 
+  `const FormComponent = () => {
+  return (
+    <div className="flex flex-col items-start space-y-4">
+      <form className="space-y-4">
+        <label htmlFor="select" className="block text-lg font-medium text-gray-700">
+          Choose an option:
+        </label>
+        <select
+          id="select"
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
+          <option value="">--Select--</option>
+          <option value="show">Show Input Field</option>
+          <option value="hide">Hide Input Field</option>
+        </select>
+
+        <div id="extra-input">
+          <label htmlFor="extra-input-field" className="block text-sm font-medium text-gray-700">
+            Extra Input:
+          </label>
+          <input
+            id="extra-input-field"
+            type="text"
+            placeholder="Type something"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default FormComponent;`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import { useEffect } from 'react';
+import $ from 'jquery';
+import FormComponent from '../../components/FormComponent/FormComponent';
+
+const Home = () => {
+  useEffect(() => {
+    $('#text').on('click', function () {
+      $(this).text('Text changed via jQuery!');
+    });
+
+    $('#animate-btn').on('click', function () {
+      $('#blue-box').animate({ left: '85%' }, 1000, function () {
+        $(this).animate({ width: '200px', height: '200px' }, 1000, function () {
+          $(this).css({ backgroundColor: 'white', color: 'blue' });
+          $(this).text('Animated with jQuery!');
+        });
+      });
+    });
+
+    $('#select').on('change', function () {
+      const selectedValue = $(this).val();
+      if (selectedValue === 'show') {
+        $('#extra-input').show();
+      } else {
+        $('#extra-input').hide();
+      }
+    });
+
+    $('#extra-input').hide();
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen space-y-8">
+      <h1
+        id="text"
+        className="text-xl font-bold cursor-pointer"
+      >
+        Click me to change text via jQuery
+      </h1>
+
+      <div
+        id="blue-box"
+        className="w-24 h-24 bg-blue-600 text-white flex items-center justify-center absolute"
+        style={{ left: '10%' }}
+      >
+        Moving...
+      </div>
+      <button
+        id="animate-btn"
+        className="px-4 py-2 bg-green-500 text-white rounded-lg"
+      >
+        Start Animation
+      </button>
+
+      <FormComponent />
+    </div>
+  );
+};
+
+export default Home;`
+      }
+    ]
   }
 ];
 
