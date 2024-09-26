@@ -1289,6 +1289,122 @@ const Home = () => {
 export default Home;`
       }
     ]
+  },
+  {
+    id: '6',
+    title: 'Лабораторна робота 6',
+    additionalInfo: [
+      `Варіант 14. 3 вкладені один в одного блоки, з рамками різних кольорів`,
+      `1. Відображається у верхньому лівому куті вікна браузера`,
+      `2. Усі рамки змінюють кольори.`,
+      `3. Рухається у правий нижній кут`,
+      `4. Зникає`,
+      `5. Виявляється у лівому нижньому кутку`,
+      `6. З'являється синьому тлі.`
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1cYOhlZqC_R89mzZ9ppYGqJZCTLpBjeYFEcV5Mrw9BGA/edit?usp=sharing',
+    results: [
+      {
+        title: 'jQuery project. Color box',
+        path: 'https://stip-l6.vercel.app/'
+      }
+    ],
+    codes: [
+      {
+        file: 'App.tsx',
+        code: 
+  `import Home from "./pages/Home/Home"
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<Home/>} />
+    </Routes>
+  )
+}
+
+export default App`
+      },
+      {
+        file: 'ColorBox.tsx',
+        code: 
+  `import { useEffect } from 'react';
+import $ from 'jquery';
+
+const ColorBox = () => {
+  useEffect(() => {
+    const colors = ['red', 'green', 'blue', 'yellow', 'purple', 'orange'];
+    let currentColorIndex = 0;
+
+    const changeBorderColor = () => {
+      $('.color-box').css('border-color', colors[currentColorIndex]);
+      $('.inner-box-1').css('border-color', colors[(currentColorIndex + 1) % colors.length]);
+      $('.inner-box-2').css('border-color', colors[(currentColorIndex + 2) % colors.length]);
+
+      currentColorIndex = (currentColorIndex + 1) % colors.length;
+    };
+
+    const animateBox = () => {
+      const $box = $('.color-box');
+      const boxWidth = $box.outerWidth();
+      const boxHeight = $box.outerHeight();
+      const windowWidth = $(window).width();
+      const windowHeight = $(window).height();
+
+      if (!windowWidth || !windowHeight) return;
+      if (!boxWidth || !boxHeight) return;
+
+      const maxLeft = windowWidth - boxWidth;
+      const maxTop = windowHeight - boxHeight;
+
+      $box.animate({
+        left: maxLeft,
+        top: maxTop
+      }, 2000, function () {
+        $(this).fadeOut(1000, function () {
+          $(this).css({ left: '0%', top: maxTop, backgroundColor: 'blue' }).fadeIn(1000);
+        });
+      });
+    };
+
+    const intervalId = setInterval(changeBorderColor, 1000);
+
+    setTimeout(animateBox, 2000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  return (
+    <div className="fixed w-full h-full">
+      <div className="color-box absolute border-8 border-red-500 w-48 h-48 flex justify-center items-center left-0 top-0">
+        <div className="inner-box-1 w-32 h-32 border-8 border-green-500 flex justify-center items-center">
+          <div className="inner-box-2 w-16 h-16 border-8 border-blue-500"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ColorBox;`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import ColorBox from '../../components/ColorBox/ColorBox';
+
+const Home = () => {
+  return (
+    <div>
+      <ColorBox />
+    </div>
+  );
+};
+
+export default Home;`
+      }
+    ]
   }
 ];
 
