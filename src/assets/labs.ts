@@ -1496,20 +1496,6 @@ const Table = () => {
     }
   };
 
-  const loadDefaultFile = () => {
-    fetch('/src/assets/document.xml')
-      .then((response) => response.text())
-      .then((text) => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(text, 'application/xml');
-        const parsedDishes = parseXML(xmlDoc);
-        setDishes(parsedDishes);
-      })
-      .catch(() => {
-        setError('Не вдалося завантажити файл за замовчуванням');
-      });
-  };
-
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Список страв</h1>
@@ -1528,12 +1514,6 @@ const Table = () => {
           ref={fileInputRef}
           className="hidden"
         />
-        <button
-          onClick={loadDefaultFile}
-          className="bg-yellow-500 text-white px-4 py-2 rounded shadow hover:bg-yellow-600 transition-colors"
-        >
-          Завантажити файл за замовчуванням
-        </button>
       </div>
 
       {error ? (
