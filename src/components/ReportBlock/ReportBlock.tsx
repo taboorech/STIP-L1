@@ -54,23 +54,27 @@ const ReportBlock = ({ lab }: ReportBlockProps) => {
             }
           </ReportContent>
         }
-        <Button 
-          className={classNames(resultsOpen ? "text-white bg-blue-500" : 'text-blue-500 outline outline-blue-500')}
-          onClick={() => setResultsOpen(!resultsOpen)}
-        >Результати виконання роботи</Button>
-        {
-          resultsOpen &&
-          <ReportContent>
-            <ul className="pl-5 list-disc">
-              { lab.results.map(({ title, path }, index) => 
-                <a key={`project-link-${title}-${path}-${index}`} className="text-blue-500" target="_blank" href={path}>
-                  <li>
-                    { title }
-                  </li>
-                </a>
-              ) }
-            </ul>
-          </ReportContent>
+        { lab.results &&
+          <>
+            <Button 
+              className={classNames(resultsOpen ? "text-white bg-blue-500" : 'text-blue-500 outline outline-blue-500')}
+              onClick={() => setResultsOpen(!resultsOpen)}
+            >Результати виконання роботи</Button>
+            {
+              resultsOpen &&
+              <ReportContent>
+                <ul className="pl-5 list-disc">
+                  { lab.results.map(({ title, path }, index) => 
+                    <a key={`project-link-${title}-${path}-${index}`} className="text-blue-500" target="_blank" href={path}>
+                      <li>
+                        { title }
+                      </li>
+                    </a>
+                  ) }
+                </ul>
+              </ReportContent>
+            }
+          </>
         }
         <Button 
           className={classNames(linksOpen ? "text-white bg-blue-500" : 'text-blue-500 outline outline-blue-500')}

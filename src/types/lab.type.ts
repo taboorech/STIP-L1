@@ -13,7 +13,7 @@ type Lab = {
   title: string;
   additionalInfo?: string[];
   conditionPath: string;
-  results: Result[];
+  results?: Result[];
   codes: Code[];
 };
 

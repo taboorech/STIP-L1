@@ -1605,6 +1605,122 @@ const Model = ({ header, image }: ModelProps) => {
 export default Model;`
       }
     ]
+  },
+  {
+    id: '8',
+    title: 'Лабораторна робота 8',
+    additionalInfo: [...
+      `Варіант 3. Кулінарна книга:
+- Тип страви;
+- Назва страви;
+- міра терезів;
+- інгредієнт 1;
+- кількість інгредієнта 1;
+…
+- рецепт;
+– кількість калорій.`.split('\n')
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1PPo6Ih0CQ4HpBfMv8youJIwtSjoGDJtT/edit?usp=sharing',
+    codes: [
+      {
+        file: 'DTD-schema',
+        code: 
+  `<!DOCTYPE cookbook [
+  <!ELEMENT cookbook (dish+)>
+  <!ELEMENT dish (type, name, measure, ingredient+, recipe, calories)>
+
+  <!ELEMENT type (#PCDATA)>
+  <!ELEMENT name (#PCDATA)>
+  <!ELEMENT measure (#PCDATA)>
+  <!ELEMENT ingredient (name, amount)>
+  <!ELEMENT name (#PCDATA)>
+  <!ELEMENT amount (#PCDATA)>
+  <!ELEMENT recipe (#PCDATA)>
+  <!ELEMENT calories (#PCDATA)>
+
+  <!-- Атрибути -->
+  <!ATTLIST dish id ID #REQUIRED>
+  <!ATTLIST ingredient id ID #IMPLIED>
+  <!ATTLIST calories unit CDATA #IMPLIED>
+
+  <!-- Опис множинності входження -->
+  <!ELEMENT cookbook (dish+)>
+  <!ELEMENT dish (type, name, measure, ingredient+, recipe, calories)>
+
+  <!-- Атрибути:
+    - dish: обов'язковий унікальний атрибут id
+    - ingredient: необов'язковий унікальний атрибут id
+    - calories: необов'язковий атрибут для одиниці виміру калорій (наприклад, ккал)
+  -->
+]>
+`
+      },
+      {
+        file: 'XMLSchema',
+        code: 
+  `<xs:schema>
+
+  <xs:element name="employees">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="employee" type="employeeType" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="employeeType">
+    <xs:sequence>
+      <xs:element name="lastName" type="xs:string"/>
+      <xs:element name="firstName" type="xs:string"/>
+      <xs:element name="middleName" type="xs:string" minOccurs="0"/>
+      <xs:element name="address" type="addressType"/>
+      <xs:element name="phone" type="phoneType"/>
+      <xs:element name="position" type="xs:string"/>
+      <xs:element name="department" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="employeeID" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="addressType">
+    <xs:sequence>
+      <xs:element name="index" type="xs:string"/>
+      <xs:element name="settlementType" type="xs:string"/>
+      <xs:element name="region" type="xs:string"/>
+      <xs:element name="district" type="xs:string"/>
+      <xs:element name="city" type="xs:string"/>
+      <xs:element name="street" type="xs:string"/>
+      <xs:element name="house" type="xs:string"/>
+      <xs:element name="apartment" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="addressID" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="phoneType">
+    <xs:sequence>
+      <xs:element name="home" type="xs:string" minOccurs="0"/>
+      <xs:element name="mobile" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="phoneID" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="positionType">
+    <xs:sequence>
+      <xs:element name="title" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="positionID" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="departmentType">
+    <xs:sequence>
+      <xs:element name="title" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="departmentID" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+</xs:schema>
+`
+      },
+    ]
   }
 ];
 
