@@ -1658,64 +1658,38 @@ export default Model;`
       {
         file: 'XMLSchema',
         code: 
-  `<xs:schema>
+  `<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema>
 
-  <xs:element name="employees">
+  <!-- Root element -->
+  <xs:element name="cookbook">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="employee" type="employeeType" minOccurs="1" maxOccurs="unbounded"/>
+        <xs:element name="dish" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="type" type="xs:string"/>
+              <xs:element name="name" type="xs:string"/>
+              <xs:element name="measure" type="xs:string"/>
+              
+              <!-- Ingredients list -->
+              <xs:element name="ingredient" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="name" type="xs:string"/>
+                    <xs:element name="amount" type="xs:decimal"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              
+              <xs:element name="recipe" type="xs:string"/>
+              <xs:element name="calories" type="xs:integer"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-
-  <xs:complexType name="employeeType">
-    <xs:sequence>
-      <xs:element name="lastName" type="xs:string"/>
-      <xs:element name="firstName" type="xs:string"/>
-      <xs:element name="middleName" type="xs:string" minOccurs="0"/>
-      <xs:element name="address" type="addressType"/>
-      <xs:element name="phone" type="phoneType"/>
-      <xs:element name="position" type="xs:string"/>
-      <xs:element name="department" type="xs:string"/>
-    </xs:sequence>
-    <xs:attribute name="employeeID" type="xs:ID" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="addressType">
-    <xs:sequence>
-      <xs:element name="index" type="xs:string"/>
-      <xs:element name="settlementType" type="xs:string"/>
-      <xs:element name="region" type="xs:string"/>
-      <xs:element name="district" type="xs:string"/>
-      <xs:element name="city" type="xs:string"/>
-      <xs:element name="street" type="xs:string"/>
-      <xs:element name="house" type="xs:string"/>
-      <xs:element name="apartment" type="xs:string" minOccurs="0"/>
-    </xs:sequence>
-    <xs:attribute name="addressID" type="xs:ID" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="phoneType">
-    <xs:sequence>
-      <xs:element name="home" type="xs:string" minOccurs="0"/>
-      <xs:element name="mobile" type="xs:string"/>
-    </xs:sequence>
-    <xs:attribute name="phoneID" type="xs:ID" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="positionType">
-    <xs:sequence>
-      <xs:element name="title" type="xs:string"/>
-    </xs:sequence>
-    <xs:attribute name="positionID" type="xs:ID" use="required"/>
-  </xs:complexType>
-
-  <xs:complexType name="departmentType">
-    <xs:sequence>
-      <xs:element name="title" type="xs:string"/>
-    </xs:sequence>
-    <xs:attribute name="departmentID" type="xs:ID" use="required"/>
-  </xs:complexType>
 
 </xs:schema>
 `
