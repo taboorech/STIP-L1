@@ -2248,7 +2248,7 @@ export default Table;
       {
         file: 'Home.tsx',
         code: 
-  `import React, { useState, useRef } from 'react';
+  `import { useState, useEffect } from 'react';
 
 const parseXML = (xml: Document) => {
   const dishes = Array.from(xml.getElementsByTagName('dish'));
@@ -2278,36 +2278,14 @@ const numberToWords = (num: string) => {
 
 const Home = () => {
   const [dishes, setDishes] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<string>('text');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(text, 'application/xml');
-        const parsedDishes = parseXML(xmlDoc);
-        setDishes(parsedDishes);
-      };
-
-      reader.onerror = () => {
-        setError('Не вдалося прочитати файл');
-      };
-
-      reader.readAsText(file);
-    }
-  };
-
-  const handleButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+  useEffect(() => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlData.trim(), 'application/xml');
+    const parsedDishes = parseXML(xmlDoc);
+    setDishes(parsedDishes);
+  }, []);
 
   const renderDishes = () => {
     switch (displayMode) {
@@ -2415,19 +2393,6 @@ const Home = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Список страв</h1>
       <div className="mb-4 space-x-4">
-        <button
-          onClick={handleButtonClick}
-          className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition-colors"
-        >
-          Завантажити XML файл
-        </button>
-        <input
-          type="file"
-          accept=".xml"
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          className="hidden"
-        />
         <select
           value={displayMode}
           onChange={(e) => setDisplayMode(e.target.value)}
@@ -2439,11 +2404,7 @@ const Home = () => {
         </select>
       </div>
 
-      {error ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
-        renderDishes()
-      )}
+      { renderDishes() }
     </div>
   );
 };
