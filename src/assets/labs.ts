@@ -2643,8 +2643,8 @@ export default Home;
     ]
   },
   {
-    id: '11',
-    title: 'Лабораторна робота 2.1',
+    id: '12',
+    title: 'Лабораторна робота 2.2',
     additionalInfo: [`Варіант 10. https://jsonplaceholder.typicode.com/posts`],
     results: [
       {
