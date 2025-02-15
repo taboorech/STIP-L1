@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Lab } from "../../types/lab.type";
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { Link } from "react-router-dom";
 
 interface ReportBlockProps {
   lab: Lab | null;
@@ -65,11 +66,11 @@ const ReportBlock = ({ lab }: ReportBlockProps) => {
               <ReportContent>
                 <ul className="pl-5 list-disc">
                   { lab.results.map(({ title, path }, index) => 
-                    <a key={`project-link-${title}-${path}-${index}`} className="text-blue-500" target="_blank" href={path}>
+                    <Link key={`project-link-${title}-${path}-${index}`} className="text-blue-500" target="_blank" to={path}>
                       <li>
                         { title }
                       </li>
-                    </a>
+                    </Link>
                   ) }
                 </ul>
               </ReportContent>
