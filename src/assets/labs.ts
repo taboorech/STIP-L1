@@ -2641,7 +2641,146 @@ export default Home;
 `
       }
     ]
+  },
+  {
+    id: '11',
+    title: 'Лабораторна робота 2.1',
+    additionalInfo: [`Варіант 10. https://jsonplaceholder.typicode.com/posts`],
+    results: [
+      {
+        title: 'Project',
+        path: '/lab2-1'
+      }
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1VkteOCCkmVZOmbCjZXD_oJpyr_27qGa_/edit?usp=sharing',
+    codes: [
+      {
+        file: 'app.ts',
+        code: 
+  `import express from 'express';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middleware/error-handler';
+import cors from "cors";
+import { createDefaultRoutes } from './routes/default-routes';
+
+function createServer() {
+  const app = express();
+
+  app.use(cors({
+    origin: [
+      'http://localhost:5173'
+    ]
+  }));
+
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('uploads'));
+
+  // routes
+  app.use('/', createDefaultRoutes());
+
+  // error handler
+  app.use(errorHandler);
+
+  return app;
+}
+
+export { createServer };`
+      },
+      {
+        file: 'entrypoint.ts',
+        code: 
+  `import "dotenv/config";
+import { createServer } from "./app";
+import { Application } from "express";
+
+async function boot() {
+  let _server: Application | undefined = createServer();
+  let serverName: string = "api";
+
+  try {
+    const port = parseInt(process.env.PORT || "8080", 10);
+
+    if (_server) {
+      _server.listen(port, () => {
+        console.log('APP ({serverName}) is running on port {port}');
+      });
+    }
+  } catch (error) {
+    console.error('Failed to boot the application', error);
+    process.exit(1);
   }
+}
+
+boot();`
+      },
+      {
+        file: 'default-routes.ts',
+        code: 
+  `import { Router } from "express";
+import { hello } from "../controllers/default-controllers";
+
+const createDefaultRoutes = () => {
+  const router = Router();
+
+  router.get('/', hello);
+
+  return router;
+};
+
+export { createDefaultRoutes };`
+      },
+      {
+        file: 'default-controllers.ts',
+        code: 
+  `import asyncHandler from 'express-async-handler';
+import { Request, Response } from 'express';
+
+const hello = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  res.json({
+    message: "Доброго дня!"
+  });
+});
+
+export { hello };`
+      },
+      {
+        file: 'CustomError.class.ts',
+        code: 
+  `class CustomError extends Error {
+  public statusNumber?: number;
+
+  constructor(message: string, statusNumber?: number) {
+    super();
+    this.message = message;
+    this.statusNumber = statusNumber;
+  }
+};
+
+export { CustomError };`
+      },
+      {
+        file: 'error-handler.ts',
+        code: 
+  `import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../libs/classes/CustomError.class';
+import { ValidationError } from 'yup';
+
+export const errorHandler = (err: CustomError, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+
+  if(err instanceof ValidationError) {
+    res.status(400).send({ errors: [{ message: err.errors }] });
+    return next(err);
+  }
+
+  res.status(err.statusNumber || 500).send({ errors: [{ message: err.message || "Something went wrong" }] });
+
+  return next(err);
+};`
+      },
+    ]
+  },
 ];
 
 export { labs };
