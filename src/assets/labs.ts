@@ -2643,13 +2643,113 @@ export default Home;
     ]
   },
   {
+    id: '11',
+    title: 'Лабораторна робота 2.1',
+    results: [
+      {
+        title: 'Project',
+        path: '/lab2-1'
+      }
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1R7TikG5Xm83Yy5jZmNJRkOkNF2vKtwLJmNnzHpV3g38/edit?usp=sharing',
+    codes: [
+      {
+        file: 'server.cjs',
+        code: 
+  `const express = require('express');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+
+// 1. Головна сторінка ('GET /')
+app.get('/', (req, res) => {
+  res.send('<h1>Welcome to My Server</h1><p><a href="/document1.txt">Document 1</a></p><p><a href="/document2.txt">Document 2</a></p>');
+});
+
+// 2. Версія HTTP та заголовки відповіді
+app.get('/headers', (req, res) => {
+  res.setHeader('Last-Modified', new Date().toUTCString());
+  res.json({
+    httpVersion: req.httpVersion,
+    server: 'Express.js',
+    date: new Date().toUTCString(),
+    lastModified: new Date().toUTCString()
+  });
+});
+
+// 4. Статичні файли (імітація документів)
+app.get('/document1.txt', (req, res) => {
+  res.send('This is document 1');
+});
+
+app.get('/document2.txt', (req, res) => {
+  res.send('This is document 2');
+});
+
+// 5. Читання частини документа через 'Range'
+app.get('/somefile.txt', (req, res) => {
+  const filePath = path.join(__dirname, 'somefile.txt');
+
+  res.sendFile(filePath);
+});
+
+// 6. 'PUT' і 'DELETE'
+app.put('/resource', (req, res) => {
+  res.send({ message: 'Resource updated successfully' });
+});
+
+app.delete('/resource', (req, res) => {
+  res.send({ message: 'Resource deleted successfully' });
+});
+
+// 7. 'OPTIONS' для перевірки підтримуваних методів
+app.options('*', (req, res) => {
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE, OPTIONS, TRACE');
+  res.send();
+});
+
+// 8. 'TRACE'
+app.use((req, res, next) => {
+  if (req.method === 'TRACE') {
+    res.setHeader('Content-Type', 'message/http');
+
+    const traceResponse = '
+TRACE \${req.url} HTTP/\${req.httpVersion}
+Host: \${req.headers.host}
+User-Agent: \${req.headers['user-agent']}
+Accept: \${req.headers.accept || 'N/A'}
+';
+
+    res.status(200).send(traceResponse);
+  } else {
+    next();
+  }
+});
+
+// 3. Обробка неіснуючих запитів
+app.use((req, res) => {
+  res.status(404).send('404 Not Found');
+});
+
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log('Server running at http://localhost:\${PORT}');
+});`
+      }
+    ]
+  },
+  {
     id: '12',
     title: 'Лабораторна робота 2.2',
     additionalInfo: [`Варіант 10. https://jsonplaceholder.typicode.com/posts`],
     results: [
       {
         title: 'Project',
-        path: '/lab2-1'
+        path: '/lab2-2'
       }
     ],
     conditionPath: 'https://docs.google.com/document/d/1VkteOCCkmVZOmbCjZXD_oJpyr_27qGa_/edit?usp=sharing',
