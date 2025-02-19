@@ -2881,6 +2881,312 @@ export const errorHandler = (err: CustomError, req: Request, res: Response, next
       },
     ]
   },
+  {
+    id: '13',
+    title: 'Лабораторна робота 2.3',
+    additionalInfo: [`Варіант 10. Отримати список замовлень користувачів GET /api/orders`],
+    results: [
+      {
+        title: 'Project',
+        path: '/lab2-3'
+      }
+    ],
+    conditionPath: 'https://docs.google.com/document/d/1RlJIfEVM7WsoQwCKBq8erR-GOv59oWs6bEyCTa8_pxk/edit?usp=sharing',
+    codes: [
+      {
+        file: 'app.ts',
+        code: 
+  `import express from 'express';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middleware/error-handler';
+import cors from "cors";
+import { createOrderRoutes } from './routes/order-routes';
+
+function createServer() {
+  const app = express();
+
+  app.use(cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174'
+    ]
+  }));
+
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('uploads'));
+
+  // routes
+  app.use('/api', createOrderRoutes());
+
+  // error handler
+  app.use(errorHandler);
+
+  return app;
+}
+
+export { createServer };`
+      },
+      {
+        file: 'entrypoint.ts',
+        code: 
+  `import "dotenv/config";
+import { createServer } from "./app";
+import { Application } from "express";
+
+async function boot() {
+  let _server: Application | undefined = createServer();
+  let serverName: string = "api";
+
+  try {
+    const port = parseInt(process.env.PORT || "8080", 10);
+
+    if (_server) {
+      _server.listen(port, () => {
+        console.log('APP (\${serverName}) is running on port \${port}');
+      });
+    }
+  } catch (error) {
+    console.error('Failed to boot the application', error);
+    process.exit(1);
+  }
+}
+
+boot();`
+      },
+      {
+        file: 'order-routes.ts',
+        code: 
+  `import { Router } from "express";
+import { getOrders } from "../controllers/order-controllers";
+
+const createOrderRoutes = () => {
+  const router = Router();
+
+  router.get('/orders', getOrders);
+
+  return router;
+};
+
+export { createOrderRoutes };`
+      },
+      {
+        file: 'order-controllers.ts',
+        code: 
+  `import asyncHandler from "express-async-handler";
+import { Request, Response } from "express";
+import { OrderStatus } from "../libs/enum/order-status.enum";
+
+const getOrders = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const orders = Array.from({ length: 5 }, (_, i) => ({
+    id: i + 1,
+    customer: 'Client \${i + 1}',
+    items: Math.floor(Math.random() * 10) + 1,
+    total: (Math.random() * 500).toFixed(2),
+    status: Object.values(OrderStatus)[Math.floor(Math.random() * 3)],
+  }));
+
+  res.json({ orders });
+});
+
+export { getOrders };`
+      },
+      {
+        file: 'CustomError.class.ts',
+        code: 
+  `class CustomError extends Error {
+  public statusNumber?: number;
+
+  constructor(message: string, statusNumber?: number) {
+    super();
+    this.message = message;
+    this.statusNumber = statusNumber;
+  }
+};
+
+export { CustomError };`
+      },
+      {
+        file: 'error-handler.ts',
+        code: 
+  `import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../libs/classes/CustomError.class';
+import { ValidationError } from 'yup';
+
+export const errorHandler = (err: CustomError, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+
+  if(err instanceof ValidationError) {
+    res.status(400).send({ errors: [{ message: err.errors }] });
+    return next(err);
+  }
+
+  res.status(err.statusNumber || 500).send({ errors: [{ message: err.message || "Something went wrong" }] });
+
+  return next(err);
+};`
+      },
+      {
+        file: 'order-status.enum.ts',
+        code: 
+  `export enum OrderStatus {
+  NEW = "NEW",
+  IN_PROGRESS = "IN_PROGRESS",
+  DELIVERED = "DELIVERED"
+}`
+      },
+      {
+        file: 'Home.tsx',
+        code: 
+  `import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../types/root-state.type";
+import { OrdersState } from "../../redux/reducers/orders/initialState";
+import Button from "../../components/Button/Button";
+import { getOrdersRequest } from "../../redux/actions/orders/actions";
+import LoadingSpinner from "../../components/loading-spinner/loading-spinner";
+
+const Home = () => {
+  const dispatch = useDispatch();
+
+  const { orders, loading } = useSelector<RootState>(state => state.orders) as OrdersState;
+
+  const getOrdersButtonClickHandler = () => {
+    dispatch(getOrdersRequest());
+  };
+
+  const renderTableContent = () => {
+    if(loading) {
+      return (
+        <tr>
+          <td className="py-5 text-center" colSpan={5}>
+            <LoadingSpinner
+              color="text-green-500"
+            />
+          </td>
+        </tr>
+      )
+    }
+
+    if(!loading && orders.length > 0) {
+      return (
+        orders.map(({ id, customer, items, total, status }) => 
+          <tr key={'order-\${id}'} className="hover:bg-gray-50">
+            <td className="px-4 py-2 text-center border-b">{ id }</td>
+            <td className="px-4 py-2 text-center border-b">{ customer }</td>
+            <td className="px-4 py-2 text-center border-b">{ items }</td>
+            <td className="px-4 py-2 text-center border-b">{ total }</td>
+            <td className="px-4 py-2 text-center border-b">{ status }</td>
+          </tr>
+        )
+      )
+    }
+
+    return (
+      <tr>
+        <td colSpan={5} className="text-center py-5">
+          No orders
+        </td>
+      </tr>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <Button className="bg-green-500 text-white hover:bg-green-600" onClick={getOrdersButtonClickHandler}>
+        Get Orders
+      </Button>
+      <div className="overflow-hidden rounded-lg border border-gray-300 shadow-md mt-4">
+        <table className="min-w-full table-auto rounded-lg border-collapse">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 text-center border-b">Id</th>
+              <th className="px-4 py-2 text-center border-b">Customer</th>
+              <th className="px-4 py-2 text-center border-b">Items</th>
+              <th className="px-4 py-2 text-center border-b">Total</th>
+              <th className="px-4 py-2 text-center border-b">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            { renderTableContent() }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default Home;`
+      },
+      {
+        file: 'loading-spinner.tsx',
+        code: 
+  `import classNames from "classnames";
+
+interface LoadingSpinnerProps {
+  color?: string;
+}
+
+const LoadingSpinner = ({ color = "text-surface" }: LoadingSpinnerProps) => {
+  return (
+    <div
+      className={classNames(
+        "inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-e-transparent",
+        "align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]",
+        color
+      )}
+      role="status"
+    >
+      <span
+        className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+      >
+        Loading...
+      </span>
+    </div>
+  );
+};
+
+export default LoadingSpinner;`
+      },
+      {
+        file: 'orders.api.ts',
+        code: 
+  `import mainInstance from "../../api/mainInstance";
+
+export const getOrders = () =>
+  mainInstance.get('/api/orders');`
+      },
+      {
+        file: 'ordersSagas.ts',
+        code: 
+  `import { call, fork, put, takeLatest } from 'redux-saga/effects';
+import { AxiosResponse } from 'axios';
+import { writeErrors } from '../../utils/write-errors';
+import { GET_ORDERS_REQUEST } from '../actions/orders/action-types';
+import { getOrdersFailure, getOrdersSuccess } from '../actions/orders/actions';
+import { getOrders } from '../api/orders.api';
+import { GetOrdersResponse } from '../../types/order.type';
+
+function* getOrdersSaga() {
+  try {
+    const result: AxiosResponse<GetOrdersResponse> = yield call(getOrders);
+    yield put(getOrdersSuccess(result.data.orders));
+  } catch (error: any) {
+    yield writeErrors(error, getOrdersFailure);
+  }
+}
+
+function* watchAuthSaga() {
+  yield takeLatest(GET_ORDERS_REQUEST, getOrdersSaga);
+}
+
+function* rootSaga() {
+  yield fork(watchAuthSaga);
+}
+
+export default rootSaga;`
+      },
+    ]
+  },
 ];
 
 export { labs };
