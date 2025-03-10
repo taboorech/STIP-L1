@@ -3187,6 +3187,252 @@ export default rootSaga;`
       },
     ]
   },
+  {
+    id: '14',
+    title: 'Лабораторна робота 2.4',
+    additionalInfo: [`Варіант 10. GET-запит на /api/random-animal, який повертає випадкову тварину: {
+&quot;animal&quot;: &quot;котик&quot; }.
+2. POST-запит на /api/reverse-number, який приймає число і повертає його у
+зворотному порядку: { &quot;reversed_number&quot;: &quot;&lt;reversed-number&gt;&quot; }.`],
+    results: [],
+    conditionPath: 'https://docs.google.com/document/d/16eMEkebY2ht_f6QFGevP7GMoy5Q2z-Mx/edit?usp=sharing',
+    codes: [
+      {
+        file: 'app.ts',
+        code: 
+  `import express from 'express';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middleware/error-handler';
+import cors from "cors";
+import { createIndexRoutes } from './routes/index/index.routes';
+import { requestLogger } from './middleware/logger';
+import { callError } from './middleware/call-error';
+
+function createServer() {
+  const app = express();
+
+  app.use(cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174'
+    ]
+  }));
+
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('uploads'));
+
+  app.use(callError);
+
+  // routes
+  app.use('/api', requestLogger, createIndexRoutes());
+
+  // error handler
+  app.use(errorHandler);
+
+  return app;
+}
+
+export { createServer };`
+      },
+      {
+        file: 'entrypoint.ts',
+        code: 
+  `import "dotenv/config";
+import { createServer } from "./app";
+import { Application } from "express";
+
+async function boot() {
+  let _server: Application | undefined = createServer();
+  let serverName: string = "api";
+
+  try {
+    const port = parseInt(process.env.PORT || "8080", 10);
+
+    if (_server) {
+      _server.listen(port, () => {
+        console.log('APP (\${serverName}) is running on port \${port}');
+      });
+    }
+  } catch (error) {
+    console.error('Failed to boot the application', error);
+    process.exit(1);
+  }
+}
+
+boot();`
+      },
+      {
+        file: 'index.routes.ts',
+        code: 
+  `import { Router } from "express";
+import { getRandomAnimal, reverseNumber } from "./index.controller";
+
+const createIndexRoutes = () => {
+  const router = Router();
+
+  router.get('/random-animal', getRandomAnimal);
+  router.post('/reverse-number', reverseNumber);
+
+  return router;
+};
+
+export { createIndexRoutes };`
+      },
+      {
+        file: 'index.controller.ts',
+        code: 
+  `import { faker } from '@faker-js/faker';
+import { Request, Response } from 'express';
+import asyncHandler from 'express-async-handler';
+import { reverseNumberValidation } from '../../yup/reverse-number.scheme';
+
+const getRandomAnimal = asyncHandler(async (req: Request, res: Response) => {
+  const animal = faker.animal.type();
+
+  res.json({ animal });
+});
+
+const reverseNumber = asyncHandler(async (req: Request, res: Response) => {
+  const { number } = await reverseNumberValidation.validate(req.body, { abortEarly: false });
+
+  const reversedNumber = Number.parseInt([...number.toString()].reverse().join(''));
+
+  res.json({
+    original: number, 
+    reversed: reversedNumber
+  })
+});
+
+export { getRandomAnimal, reverseNumber };`
+      },
+      {
+        file: 'CustomError.class.ts',
+        code: 
+  `class CustomError extends Error {
+  public statusNumber: number;
+
+  constructor(statusNumber: number, message: string) {
+    super();
+    this.message = message;
+    this.statusNumber = statusNumber;
+  }
+};
+
+export { CustomError };`
+      },
+      {
+        file: 'error-handler.ts',
+        code: 
+  `import { NextFunction, Request, Response } from 'express';
+import { CustomError } from '../libs/classes/CustomError.class';
+import { ValidationError } from 'yup';
+import logger from '../config/logger';
+
+export const errorHandler = (err: CustomError, req: Request, res: Response, next: NextFunction) => {
+  logger.error(\`Error: \${err.message} | Status: \${err.statusNumber || 500} | URL: \${req.url}\`);
+
+  if(err instanceof ValidationError) {
+    res.status(400).send({ errors: [{ message: err.errors }] });
+    return next(err);
+  }
+
+  res.status(err.statusNumber || 500).send({ errors: [{ message: err.message || "Something went wrong" }] });
+
+  return next(err);
+};`
+      },
+      {
+        file: 'middleware/logger.ts',
+        code: 
+  `import { NextFunction, Request, Response } from 'express';
+import logger from '../config/logger';
+
+export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
+  logger.info(\`Method: \${req.method}, URL: \${req.url}\`);
+  
+  return next();
+};`
+      },
+      {
+        file: 'call-error.ts',
+        code: 
+  `import asyncHandler from 'express-async-handler';
+import { NextFunction, Request, Response } from 'express';
+import { callErrorValidation } from '../yup/call-error.scheme';
+import { CustomError } from '../libs/classes/CustomError.class';
+
+export const callError = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+  const { callError, errorMessage } = await callErrorValidation.validate(req.query, { abortEarly: false });
+
+  if(callError) {
+    throw new CustomError(400, errorMessage || 'Unknown error');
+  }
+  
+  return next();
+});`
+      },
+      {
+        file: 'config/logger.ts',
+        code: 
+  `import winston from 'winston';
+import path from 'path';
+
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.printf(({ timestamp, level, message }) => {
+    return \`[\${timestamp}] \${level.toUpperCase()}: \${message}\`;
+  })
+);
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: logFormat,
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        logFormat
+      )
+    }),
+    new winston.transports.File({
+      filename: path.join('logs', 'error.log'),
+      level: 'error'
+    }),
+    new winston.transports.File({
+      filename: path.join('logs', 'combined.log')
+    })
+  ]
+});
+
+export default logger;
+`
+      },
+      {
+        file: 'call-error.scheme.ts',
+        code: 
+  `import * as yup from 'yup';
+
+const callErrorValidation = yup.object().shape({
+  callError: yup.boolean().optional(),
+  errorMessage: yup.string().optional()
+});
+
+export { callErrorValidation };`
+      },
+      {
+        file: 'reverse-number.scheme.ts',
+        code: 
+  `import * as yup from 'yup';
+
+const reverseNumberValidation = yup.object().shape({
+  number: yup.number().required('Number can\'t be empty')
+});
+
+export { reverseNumberValidation };`
+      },
+    ]
+  },
 ];
 
 export { labs };
