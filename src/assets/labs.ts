@@ -3194,7 +3194,10 @@ export default rootSaga;`
 &quot;animal&quot;: &quot;котик&quot; }.
 2. POST-запит на /api/reverse-number, який приймає число і повертає його у
 зворотному порядку: { &quot;reversed_number&quot;: &quot;&lt;reversed-number&gt;&quot; }.`],
-    results: [],
+    results: [{
+      title: 'Screens',
+      path: '/lab2-4'
+    }],
     conditionPath: 'https://docs.google.com/document/d/16eMEkebY2ht_f6QFGevP7GMoy5Q2z-Mx/edit?usp=sharing',
     codes: [
       {
