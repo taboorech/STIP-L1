@@ -3436,6 +3436,602 @@ export { reverseNumberValidation };`
       },
     ]
   },
+  {
+    id: '15',
+    title: 'Лабораторна робота 2.5',
+    additionalInfo: [`Варіант 10. Створити API для системи підтримки: заявки користувачів, статуси, JWT-
+аутентифікація, WebSockets для онлайн-чату з підтримкою.`],
+    results: [{
+      title: 'Report',
+      path: '/lab2-5'
+    }],
+    conditionPath: 'https://docs.google.com/document/d/1yBzpXMy9CwYL23JIFHY4frvEpTL8-gyXnGJFfRBR7Uw/edit?usp=sharing',
+    codes: [
+      {
+        file: 'app.ts',
+        code: 
+  `import express from 'express';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middleware/error-handler';
+import cors from "cors";
+import { createAuthRoutes } from './routes/auth/auth.routes';
+import { createServer as createServerHttp } from 'http';
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
+import { createApplicationRoutes } from './routes/application/application.routes';
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'support service',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./dist/src/routes/**/*.js']
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+
+function createServer() {
+  const app = express();
+
+  app.use(cors({
+    origin: [
+      'http://localhost:5173'
+    ]
+  }));
+
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('uploads'));
+
+  // routes
+  app.use('/auth', createAuthRoutes());
+  app.use('/application', createApplicationRoutes());
+  app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs));
+
+  // error handler
+  app.use(errorHandler);
+
+  const httpServer = createServerHttp(app);
+
+  return httpServer;
+}
+
+export { createServer };`
+      },
+      {
+        file: 'entrypoint.ts',
+        code: 
+  `import "dotenv/config";
+import { createServer } from "./app";
+import { Server } from "http";
+import { formSocketHandler } from "./socket";
+
+async function boot() {
+  let _server: Server | undefined = createServer();
+  let serverName: string = "api";
+
+  try {
+    const port = parseInt(process.env.PORT || "5000", 10);
+
+    if (_server) {
+      formSocketHandler(_server);
+      _server.listen(port, () => {
+        console.log(\`APP (\${serverName}) is running on port \${port}\`);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to boot the application', error);
+    process.exit(1);
+  }
+}
+
+boot();`
+      },
+      {
+        file: 'socket.ts',
+        code: `import { Server as HttpServer } from "http";
+import { Server } from "socket.io";
+import { socketAuthMiddleware } from "./middleware/auth-middleware";
+import { UserRole } from "./libs/enum/user-role.enum";
+import User from "./models/user.model";
+
+const formSocketHandler = (httpServer: HttpServer) => {
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:5173",
+      credentials: true
+    },
+  });
+
+  io.use(socketAuthMiddleware);
+
+  const sockets = new Map<number, string>();
+  const admins: number[] = [];
+
+  io.on("connection", async (socket) => {
+    const user = socket.user;
+    sockets.set(user.id, socket.id);
+  
+    console.log(\`✅ \${user.id} connected\`);
+  
+    if (user.role === UserRole.ADMIN) {
+      const users = await User.query().where("role", UserRole.USER);
+      const userList = users.map((u) => ({ id: u.id, username: u.email }));
+  
+      if (!admins.includes(user.id)) {
+        admins.push(user.id);
+      }
+
+      socket.emit("init_admin", { users: userList, user });
+    } else {
+      socket.emit("init_user", { message: \`Welcome, \${user.email}\`, user });
+    }
+  
+    socket.on("sendMessage", ({ recipientId, text }) => {
+      const senderId = user.id;
+  
+      const message = {
+        senderId,
+        recipientId,
+        text,
+        sentAt: new Date().toISOString()
+      };
+
+      const recipientSocketId = sockets.get(recipientId);
+      
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit("new_message", message);
+      }
+
+      if(user.role === UserRole.USER && !recipientId) {
+        admins.map((id) => {
+          console.log(id);
+          
+          const adminSocket = sockets.get(id);
+          if(adminSocket) {
+            io.to(adminSocket).emit("new_message", message)
+          }
+        })
+      }
+  
+      socket.emit("new_message", message);
+    });
+  
+    socket.on("disconnect", () => {
+      sockets.delete(user.id);
+      console.log(\`❌ \${user.email} disconnected\`);
+    });
+  });
+}
+
+export { formSocketHandler };`
+      },
+      {
+        file: 'auth.routes.ts',
+        code: 
+  `/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication and authorization
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     AuthCredentials:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: user@example.com
+ *         password:
+ *           type: string
+ *           format: password
+ *           example: mysecurepassword
+ *     AuthTokens:
+ *       type: object
+ *       properties:
+ *         accessToken:
+ *           type: string
+ *           example: eyJhbGciOiJIUzI1NiIs...
+ *         refreshToken:
+ *           type: string
+ *           example: eyJhbGciOiJIUzI1NiIs...
+ */
+
+import { Router } from "express";
+import { signUp, login, logout, refreshTokens } from "./auth.controller";
+import { authMiddleware, refreshMiddleware } from "../../middleware/auth-middleware";
+
+const createAuthRoutes = () => {
+  const router = Router();
+
+  /**
+   * @swagger
+   * /auth/signup:
+   *   post:
+   *     tags: [Auth]
+   *     summary: Register a new user
+   *     description: Create a new user account with email and password.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/AuthCredentials'
+   *     responses:
+   *       201:
+   *         description: User successfully registered
+   *       400:
+   *         description: Invalid input or user already exists
+   */
+  router.post("/signup", signUp);
+
+  /**
+   * @swagger
+   * /auth/login:
+   *   post:
+   *     tags: [Auth]
+   *     summary: User login
+   *     description: Authenticates user and returns access and refresh tokens.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/AuthCredentials'
+   *     responses:
+   *       200:
+   *         description: Login successful
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/AuthTokens'
+   *       401:
+   *         description: Invalid credentials
+   */
+  router.post("/login", login);
+
+  /**
+   * @swagger
+   * /auth/logout:
+   *   get:
+   *     tags: [Auth]
+   *     summary: Logout user
+   *     description: Logs out the currently authenticated user.
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Logged out successfully
+   *       401:
+   *         description: Unauthorized or token missing
+   */
+  router.get("/logout", authMiddleware, logout);
+
+  /**
+   * @swagger
+   * /auth/refresh:
+   *   get:
+   *     tags: [Auth]
+   *     summary: Refresh tokens
+   *     description: Returns a new access token using a valid refresh token.
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: New access token issued
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/AuthTokens'
+   *       401:
+   *         description: Invalid or expired refresh token
+   */
+  router.get("/refresh", refreshMiddleware, refreshTokens);
+
+  return router;
+};
+
+export { createAuthRoutes };`
+      },
+      {
+        file: 'auth.controller.ts',
+        code: 
+  `import asyncHandler from 'express-async-handler';
+import { Request, Response } from "express";
+import { createUserValidation, loginUserValidation, refreshUserTokenValidation } from '../../yup/user.scheme';
+import * as bcrypt from "bcrypt";
+import User from '../../models/user.model';
+import { CustomError } from '../../libs/classes/custom-error.class';
+import { generateTokens } from '../../utils/generate-tokens';
+
+const signUp = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = await createUserValidation.validate(req.body, { abortEarly: false })
+
+  const securedPassword = await bcrypt.hash(password, 10);
+
+  const user = await User.query().insert({
+    email,
+    password: securedPassword
+  });
+
+  res.status(201).json(user);
+});
+
+const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = await loginUserValidation.validate(req.body, { abortEarly: false });
+  
+  const user = await User.query().findOne({ email });
+
+  if(!user) {
+    throw new CustomError(404, 'Wrong user');
+  }
+
+  const comparedPasswords = await bcrypt.compare(password, user.password);
+
+  if(!comparedPasswords) {
+    throw new CustomError(403, 'Wrong password');
+  }
+
+  const tokens = await generateTokens(user);
+
+  res.status(200).json(tokens);
+});
+
+const refreshTokens = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const refreshToken = await refreshUserTokenValidation.validate(req.headers.authorization.replace("Bearer ", ""));
+
+  const user = await User.query().findById(req.user.id);
+
+  if(!user) {
+    throw new CustomError(404, 'User not found');
+  }
+
+  const verifyToken = await bcrypt.compare(refreshToken, user.refreshToken);
+
+  if(!verifyToken) {
+    throw new CustomError(403, 'Wrong refresh token');
+  }
+
+  const tokens = await generateTokens(user);
+
+  res.status(200).json(tokens);
+});
+
+const logout = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  await User.query().patchAndFetchById(req.user.id, { refreshToken: null });
+  res.status(200).send("Logout successfully");
+});
+
+export { signUp, login, logout, refreshTokens };`
+      },
+      {
+        file: 'application.routes.ts',
+        code: 
+  `import { Router } from 'express';
+import { createApplication, getAllApplications } from './application.controller';
+import { authMiddleware } from '../../middleware/auth-middleware';
+
+const createApplicationRoutes = () => {
+  const router = Router();
+
+  /**
+   * @swagger
+   * tags:
+   *   name: Applications
+   *   description: Application management
+   */
+
+  /**
+   * @swagger
+   * components:
+   *   schemas:
+   *     Application:
+   *       type: object
+   *       properties:
+   *         id:
+   *           type: integer
+   *           example: 1
+   *         user_id:
+   *           type: integer
+   *           example: 5
+   *         status:
+   *           type: string
+   *           enum: [OPEN, IN_PROGRESS, CLOSED]
+   *           example: OPEN
+   *         title:
+   *           type: string
+   *           example: Заявка на доступ
+   *         description:
+   *           type: string
+   *           example: Хочу отримати доступ до системи
+   *         created_at:
+   *           type: string
+   *           format: date-time
+   *         updated_at:
+   *           type: string
+   *           format: date-time
+   *     CreateApplicationDto:
+   *       type: object
+   *       required:
+   *         - title
+   *         - description
+   *       properties:
+   *         title:
+   *           type: string
+   *           example: Заявка на участь
+   *         description:
+   *           type: string
+   *           example: Будь ласка, прийміть мою заявку
+   */
+
+  /**
+   * @swagger
+   * /applications:
+   *   post:
+   *     tags: [Applications]
+   *     summary: Create new application
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateApplicationDto'
+   *     responses:
+   *       201:
+   *         description: Application created successfully
+   *       400:
+   *         description: Invalid input
+   */
+  router.post('/', authMiddleware, createApplication);
+
+  /**
+   * @swagger
+   * /applications:
+   *   get:
+   *     tags: [Applications]
+   *     summary: Get all applications
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: List of applications
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Application'
+   */
+  router.get('/', authMiddleware, getAllApplications);
+
+  return router;
+};
+
+export { createApplicationRoutes };`
+      },
+      {
+        file: 'application.controller.ts',
+        code: 
+  `import asyncHandler from 'express-async-handler';
+import { Request, Response } from 'express';
+import Application from '../../models/application.model';
+import { ApplicationStatus } from '../../libs/enum/application-status.enum';
+import { createApplicationValidation } from '../../yup/application.scheme';
+
+const createApplication = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { title, description } = await createApplicationValidation.validate(req.body, { abortEarly: false });
+
+  await Application.query().insert({
+    user_id: req.user.id,
+    title,
+    description,
+    status: ApplicationStatus.OPEN
+  });
+
+  res.sendStatus(201);
+});
+
+const getAllApplications = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const applications = await Application
+    .query()
+    .withGraphFetched('user')
+    .modifyGraph('user', builder => {
+      builder.select('id', 'email', 'role')
+    });
+
+  res.json(applications);
+});
+
+export { createApplication, getAllApplications };`
+      },
+      {
+        file: 'user.scheme.ts',
+        code: 
+  `import * as yup from "yup";
+import { UserRole } from "../libs/enum/user-role.enum";
+
+const createUserValidation = yup.object().shape({
+  email: yup.string().trim().email().required('Email is required'),
+  password: yup.string().required('Password is required').min(3, 'Password must be at least 8 characters long'),
+});
+
+const loginUserValidation = yup.object().shape({
+  email: yup.string().trim().email().required('Email is required'),
+  password: yup.string().required('Password is required')
+});
+
+const refreshUserTokenValidation = yup.string().required("Enter your refreshToken");
+
+const editProfileValidation = yup.object().shape({
+  email: yup.string().trim().email().optional(),
+  firstName: yup.string().trim().optional(),
+  lastName: yup.string().trim().optional(),
+  phoneNumber: yup.string().min(4, 'Phone number can\'t contain less than 4 numbers').optional(),
+  password: yup.string().optional().min(8, 'Password must be at least 8 characters long'),
+});
+
+const changeUserRoleValidation = yup.object().shape({
+  user: yup.number().required('User id must contain a value'),
+  role: yup.mixed<UserRole>().oneOf(Object.values(UserRole), \`Role must be one of the values: \${Object.values(UserRole).join(', ')}\`).required('User role must contain a value')
+});
+
+const updateUserInfoValidation = yup.object().shape({
+  firstName: yup.string().optional(),
+  lastName: yup.string().optional(),
+  password: yup.string().optional(),
+});
+
+const deleteUserValidation = yup.object().shape({
+  user: yup.number().required('User ID must contain value')
+});
+
+export { 
+  createUserValidation, 
+  loginUserValidation, 
+  refreshUserTokenValidation, 
+  editProfileValidation, 
+  changeUserRoleValidation,
+  updateUserInfoValidation,
+  deleteUserValidation 
+};`
+      },
+      {
+        file: 'application.scheme.ts',
+        code: 
+  `import * as yup from 'yup';
+
+const createApplicationValidation = yup.object().shape({
+  title: yup
+    .string()
+    .min(3, 'Title must contain at least 3 symbols')
+    .max(50, 'Title must contain less then 50 symbols')
+    .required('Title can\'t be empty'),
+
+  description: yup.string().min(10, 'At least 10 symbols').required('Description must contain value')
+});
+
+export { createApplicationValidation };`
+      },
+    ]
+  },
 ];
 
 export { labs };
