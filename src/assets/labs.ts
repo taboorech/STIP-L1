@@ -4032,6 +4032,203 @@ export { createApplicationValidation };`
       },
     ]
   },
+  {
+    id: '16',
+    title: 'Лабораторна робота 2.6',
+    additionalInfo: [`Варіант 10. Використання Docker для запуску локального сервера Redis`],
+    results: [{
+      title: 'Report',
+      path: '/lab2-6'
+    }],
+    conditionPath: 'https://docs.google.com/document/d/1T1aIeWrZGvJbG2-nM9Ihzua3FruziayNcPJ8a3WrBug/edit?usp=sharing',
+    codes: [
+      {
+        file: 'app.ts',
+        code: 
+  `import express from 'express';
+import bodyParser from 'body-parser';
+import { errorHandler } from './middlewares/error-handler';
+import cors from "cors";
+import { createIndexRoutes } from './routes/index/index.routes';
+
+function createServer() {
+  const app = express();
+
+  app.use(cors({
+    origin: [
+      'http://localhost:5173'
+    ]
+  }));
+
+  app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.static('uploads'));
+
+  // routes
+  app.use('/api', createIndexRoutes());
+
+  // error handler
+  app.use(errorHandler);
+
+  return app;
+}
+
+export { createServer };`
+      },
+      {
+        file: 'entrypoint.ts',
+        code: 
+  `import "dotenv/config";
+import { createServer } from "./app";
+import { Application } from "express";
+
+async function boot() {
+  let _server: Application | undefined = createServer();
+  let serverName: string = "api";
+
+  try {
+    const port = parseInt(process.env.PORT || "5000", 10);
+
+    if (_server) {
+      _server.listen(port, () => {
+        console.log(\`APP (\${serverName}) is running on port \${port}\`);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to boot the application', error);
+    process.exit(1);
+  }
+}
+
+boot();`
+      },
+      {
+        file: 'redis.ts',
+        code: `import Redis from "ioredis";
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "localhost",
+  port: parseInt(process.env.REDIS_PORT || "6379"),
+});
+
+export default redis;`
+      },
+      {
+        file: 'index.routes.ts',
+        code: 
+  `import { Router } from "express"
+import { createRecord, getAllRecords, getRecord } from "./index.controller";
+
+const createIndexRoutes = () => {
+  const router = Router();
+
+  router.get('/', getAllRecords);
+  router.get('/:sid', getRecord);
+  router.post('/:sid', createRecord);
+
+  return router;
+}
+
+export { createIndexRoutes };`
+      },
+      {
+        file: 'index.controller.ts',
+        code: 
+  `import asyncHandler from "express-async-handler";
+import { Request, Response } from "express";
+import redis from "../../config/redis";
+import { CustomError } from "../../libs/classes/custom-error.class";
+
+const getAllRecords = asyncHandler(async (req: Request, res: Response) => {
+  const keys = await redis.keys("record:*");
+  const records: Record<string, string> = {};
+
+  for (const key of keys) {
+    const value = await redis.get(key);
+    if (value !== null) {
+      records[key] = value;
+    }
+  }
+
+  res.json(records);
+});
+
+const getRecord = asyncHandler(async (req: Request, res: Response) => {
+  const { sid } = req.params;
+
+  const value = await redis.get(\`record:\${sid}\`);
+  if (value === null) {
+    throw new CustomError(404, \`Key \${sid} not found\`);
+  } else {
+    res.json({ key: sid, value });
+  }
+});
+
+const createRecord = asyncHandler(async (req: Request, res: Response) => {
+  const { sid } = req.params;
+  const { value } = req.body;
+
+  if (!value) {
+    throw new CustomError(400, "Missing 'value' in request body");
+  }
+
+  await redis.set(\`record:\${sid}\`, value);
+
+  res.status(201).json({ message: \`Key \${sid} set\`, value });
+});
+
+export { getRecord, getAllRecords, createRecord };`
+      },
+      {
+        file: 'Dockerfile',
+        code: 
+  `FROM node:20-slim
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN tsc
+
+EXPOSE 8080
+
+CMD ["node", "dist/src/entrypoint.js"]`
+      },
+      {
+        file: 'docker-compose.yaml',
+        code: 
+  `version: '3.9'
+
+name: lab5
+
+services:
+
+  app:
+    build: .
+    container_name: node_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"`
+      },
+    ]
+  },
 ];
 
 export { labs };
