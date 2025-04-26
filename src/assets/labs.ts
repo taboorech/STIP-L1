@@ -4229,6 +4229,58 @@ services:
       },
     ]
   },
+  {
+    id: '17',
+    title: 'Лабораторна робота 2.7',
+    additionalInfo: [`Варіант 10. Реалізація Webhooks за допомогою AWS Lambda (Замінено на Functions за допомогою Firebase)`],
+    results: [{
+      title: 'Report',
+      path: '/lab2-7'
+    }],
+    conditionPath: 'https://docs.google.com/document/d/1uhRiFchakYP33cmnU1kqe5D7bDuER-F-/edit?usp=sharing',
+    codes: [
+      {
+        file: 'index.ts',
+        code: 
+  `import {onRequest} from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
+
+export const helloWorld = onRequest((request, response) => {
+  const now = new Date();
+  const time = now.toLocaleString();
+
+  const quotes = [
+    "You are capable of more than you know.",
+    "Every day is a new opportunity.",
+    "Don't be afraid to start small.",
+    "Consistency matters more than speed.",
+    "Even the smallest step is progress.",
+  ];
+
+  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+  const labInfo = {
+    student: "Yehor",
+    lab: "Lab №7",
+    topic: "Webhook via Firebase Functions",
+    timestamp: time,
+  };
+
+  logger.info(
+    "📥 New request received at helloWorld function",
+    {structuredData: true, labInfo},
+  );
+
+  response.status(200).send({
+    message: "👋 Welcome to my Firebase Function!",
+    info: labInfo,
+    motivationalQuote: randomQuote,
+  });
+});
+`
+      },
+    ]
+  },
 ];
 
 export { labs };
